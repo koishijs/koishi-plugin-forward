@@ -1,5 +1,4 @@
 import { Command, Context, Dict, Schema, segment, Session, Time } from 'koishi'
-import { parsePlatform } from '@koishijs/helpers'
 
 declare module 'koishi' {
   interface Channel {
@@ -47,7 +46,8 @@ export function apply(ctx: Context, { rules, interval }: Config) {
 
     try {
       // get selfId
-      const [platform, channelId] = parsePlatform(rule.target)
+      const platform = rule.target.split(':', 1)[0]
+      const channelId = rule.target.slice(platform.length + 1)
       if (!rule.selfId) {
         const channel = await ctx.database.getChannel(platform, channelId, ['assignee', 'guildId'])
         if (!channel || !channel.assignee) return

@@ -28,7 +28,7 @@
   "koishi": {
     "category": "tool",
     "description": {
-      "en": "Forward messages between different channels",
+      "en": "Forward messages across channels",
       "zh": "在不同的频道间转发消息"
     },
     "locales": [
