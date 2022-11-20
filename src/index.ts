@@ -55,7 +55,8 @@ export function apply(ctx: Context, config: Config) {
 
   async function sendRelay(session: Session, rule: Partial<Rule>) {
     const { author, parsed } = session
-    if (!parsed.content) return
+    let { content } = parsed
+    if (!content) return
 
     try {
       // get selfId
@@ -69,20 +70,19 @@ export function apply(ctx: Context, config: Config) {
       }
 
       const bot = ctx.bots[`${platform}:${rule.selfId}`]
-      const chain = segment.parse(parsed.content)
 
       // replace all mentions (koishijs/koishi#506)
-      if (chain.some(item => item.type === 'at')) {
+      if (segment.select(parsed.content, 'at').length) {
         const dict = await session.bot.getGuildMemberMap(session.guildId)
-        chain.forEach((item, index) => {
-          if (item.type === 'at') {
-            const content = '@' + dict[item.attrs.id]
-            chain.splice(index, 1, segment('text', { content }))
+        content = segment.transform(content, {
+          at(attrs) {
+            if (!attrs.id) return true
+            return '@' + dict[attrs.id]
           }
         })
       }
 
-      const content = `${author.nickname || author.username}: ${chain.join('')}`
+      content = `${author.nickname || author.username}: ${content}`
       await bot.sendMessage(channelId, content, rule.guildId).then((ids) => {
         for (const id of ids) {
           relayMap[id] = {

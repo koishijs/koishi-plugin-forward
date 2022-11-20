@@ -25,25 +25,28 @@ const fork = app.plugin(forward, {
   }],
 })
 
+const send = app.bots[0].sendMessage = jest.fn(async () => ['2000'])
+app.bots[0].getGuildMemberList = jest.fn(async () => [{ userId: '321', nickname: 'foo' }])
+
 before(async () => {
   await app.start()
 })
 
 describe('@koishijs/plugin-forward', () => {
   it('basic support', async () => {
-    const send = app.bots[0].sendMessage = jest.fn(async () => ['2000'])
+    send.mockClear()
     await session2.shouldNotReply('hello')
     expect(send.mock.calls).to.have.length(1)
     expect(send.mock.calls).to.have.shape([['654', '123: hello']])
-    send.mockClear()
 
+    send.mockClear()
     await session3.shouldNotReply('hello')
     expect(send.mock.calls).to.have.length(0)
     await session3.shouldNotReply('<quote id=2000/> hello')
     expect(send.mock.calls).to.have.length(1)
     expect(send.mock.calls).to.have.shape([['456', '789: hello']])
-    send.mockClear()
 
+    send.mockClear()
     send.mockImplementation(async () => ['3000'])
     await session2.shouldNotReply('<quote id=3000/> hello')
     expect(send.mock.calls).to.have.length(1)
@@ -55,11 +58,19 @@ describe('@koishijs/plugin-forward', () => {
     fork.update({ storage: 'database' })
     await app.lifecycle.flush()
     await app.mock.initUser('123', 3)
+    await app.mock.initChannel('456')
+    await app.mock.initChannel('654')
 
     await session2.shouldReply('forward', /设置消息转发/)
-    await session2.shouldReply('forward add #123', '已成功添加目标频道 mock:123。')
-    await session2.shouldReply('forward ls', '当前频道的目标频道列表为：\nmock:123')
-    await session2.shouldReply('forward rm #123', '已成功移除目标频道 mock:123。')
+    await session2.shouldReply('forward add #654', '已成功添加目标频道 mock:654。')
+    await session2.shouldReply('forward ls', '当前频道的目标频道列表为：\nmock:654')
+
+    send.mockClear()
+    await session2.shouldNotReply('hello <at id=321/>')
+    expect(send.mock.calls).to.have.length(1)
+    expect(send.mock.calls).to.have.shape([['654', '123: hello @foo']])
+
+    await session2.shouldReply('forward rm #654', '已成功移除目标频道 mock:654。')
     await session2.shouldReply('forward ls', '当前频道没有设置目标频道。')
     await session2.shouldReply('forward clear', '已成功移除全部目标频道。')
   })

@@ -51,6 +51,7 @@
     "@types/mocha": "^9.1.1",
     "@types/node": "^18.11.9",
     "@koishijs/loader": "^2.2.2",
+    "@koishijs/plugin-help": "^1.2.5",
     "@koishijs/plugin-mock": "^2.2.0",
     "@koishijs/vitepress": "^1.3.2",
     "atsc": "^1.1.2",
