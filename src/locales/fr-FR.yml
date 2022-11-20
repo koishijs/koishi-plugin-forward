@@ -1,23 +1,23 @@
 commands:
   forward:
-    description: 设置消息转发
-    usage: 当前频道 ID：{cid}
+    description: Définir la règle du transfert de messages
+    usage: 'ID de canal actuel : {cid}'
   forward.add:
-    description: 添加目标频道
+    description: Ajouter un canal pour transfert de message
     messages:
-      unchanged: '{0} 已经是当前频道的目标频道。'
-      updated: '已成功添加目标频道 {0}。'
+      unchanged: '{0} est déjà le canal cible du canal actuel pour transfert de message.'
+      updated: 'Le canal pour transfert de message {0} a été ajouté avec succès.'
   forward.remove:
-    description: 移除目标频道
+    description: Supprimer le canal pour transfert de message.
     messages:
-      unchanged: '{0} 不是当前频道的目标频道。'
-      updated: '已成功移除目标频道 {0}。'
+      unchanged: '{0} n''est pas le canal du canal actuel pour transfert de message.'
+      updated: 'Le canal pour transfert de message {0} a été supprimé avec succès.'
   forward.clear:
-    description: 移除全部目标频道
+    description: Supprimer tous les canaux pour transfert de message.
     messages:
-      updated: '已成功移除全部目标频道。'
+      updated: 'Tous les canaux pour transfert de message ont été supprimés avec succès.'
   forward.list:
-    description: 查看目标频道列表
+    description: Voir la liste des canaux pour transfert de message.
     messages:
-      empty: '当前频道没有设置目标频道。'
-      header: '当前频道的目标频道列表为：'
+      empty: 'Le canal actuel ne définir pas le canal pour transfert de message.'
+      header: 'Les canaux de canal actuel pour transfert de messages :'
