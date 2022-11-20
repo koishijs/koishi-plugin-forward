@@ -1,4 +1,5 @@
 import { Command, Context, Dict, Schema, segment, Session, Time } from 'koishi'
+import {} from '@koishijs/loader'
 
 declare module 'koishi' {
   interface Channel {
@@ -23,19 +24,31 @@ export const Rule: Schema<Rule> = Schema.object({
 export const name = 'forward'
 
 export interface Config {
-  rules: Rule[]
-  interval?: number
+  rules?: Rule[]
+  storage?: 'database' | 'config'
+  replyTimeout?: number
 }
 
-export const Config: Schema<Config | Rule[], Config> = Schema.union([
+export const Config: Schema<Config> = Schema.intersect([
   Schema.object({
-    rules: Schema.array(Rule).description('转发规则列表。'),
-    interval: Schema.natural().role('ms').default(Time.hour).description('推送消息不再响应回复的时间。'),
+    storage: Schema.union([
+      Schema.const('database' as const).description('数据库'),
+      Schema.const('config' as const).description('配置文件'),
+    ]).default('config').description('转发规则的存储方式。'),
   }),
-  Schema.transform(Schema.array(Rule), (rules) => ({ rules, interval: Time.hour })),
-])
+  Schema.union([
+    Schema.object({
+      storage: Schema.const('config' as const),
+      rules: Schema.array(Rule).description('转发规则列表。').hidden(),
+    }),
+    Schema.object({}),
+  ] as const),
+  Schema.object({
+    replyTimeout: Schema.natural().role('ms').default(Time.hour).description('转发消息不再响应回复的时间。'),
+  }),
+] as const)
 
-export function apply(ctx: Context, { rules, interval }: Config) {
+export function apply(ctx: Context, config: Config) {
   ctx.i18n.define('zh', require('./locales/zh-CN'))
 
   const relayMap: Dict<Rule> = {}
@@ -78,17 +91,13 @@ export function apply(ctx: Context, { rules, interval }: Config) {
             selfId: session.selfId,
             guildId: session.guildId,
           }
-          ctx.setTimeout(() => delete relayMap[id], interval)
+          ctx.setTimeout(() => delete relayMap[id], config.replyTimeout)
         }
       })
     } catch (error) {
       ctx.logger('forward').warn(error)
     }
   }
-
-  ctx.before('attach-channel', (session, fields) => {
-    fields.add('forward')
-  })
 
   ctx.middleware(async (session: Session<never, 'forward'>, next) => {
     const { quote = {}, subtype } = session
@@ -97,14 +106,14 @@ export function apply(ctx: Context, { rules, interval }: Config) {
     if (data) return sendRelay(session, data)
 
     const tasks: Promise<void>[] = []
-    if (ctx.database) {
-      for (const target of session.channel.forward) {
-        tasks.push(sendRelay(session, { target }))
-      }
-    } else {
-      for (const rule of rules) {
+    if (config.storage === 'config') {
+      for (const rule of config.rules) {
         if (session.cid !== rule.source) continue
         tasks.push(sendRelay(session, rule))
+      }
+    } else if (ctx.database) {
+      for (const target of getTargets(session)) {
+        tasks.push(sendRelay(session, { target }))
       }
     }
     const [result] = await Promise.all([next(), ...tasks])
@@ -115,7 +124,28 @@ export function apply(ctx: Context, { rules, interval }: Config) {
     forward: 'list',
   })
 
-  ctx.using(['database'], (ctx) => {
+  ctx.before('attach-channel', (session, fields) => {
+    fields.add('forward')
+  })
+
+  if (config.storage === 'database') {
+    ctx.using(['database'], commands)
+  // TODO support config storage
+  // } else if (ctx.loader?.writable) {
+  //   ctx.plugin(commands)
+  }
+
+  function getTargets(session: Session<never, 'forward'>) {
+    if (config.storage === 'database') {
+      return session.channel.forward
+    }
+
+    return config.rules
+      .filter(rule => rule.source === session.cid)
+      .map(rule => rule.target)
+  }
+
+  function commands(ctx: Context) {
     const cmd = ctx
       .command('forward [operation:string] <channel:channel>', { authority: 3 })
       .alias('fwd')
@@ -126,20 +156,20 @@ export function apply(ctx: Context, { rules, interval }: Config) {
       .action(callback)
 
     register('.add <channel:channel>', async ({ session }, id) => {
-      const { forward } = session.channel
-      if (forward.includes(id)) {
+      const targets = getTargets(session)
+      if (targets.includes(id)) {
         return session.text('.unchanged', [id])
       } else {
-        forward.push(id)
+        targets.push(id)
         return session.text('.updated', [id])
       }
     })
 
     register('.remove <channel:channel>', async ({ session }, id) => {
-      const { forward } = session.channel
-      const index = forward.indexOf(id)
+      const targets = getTargets(session)
+      const index = targets.indexOf(id)
       if (index >= 0) {
-        forward.splice(index, 1)
+        targets.splice(index, 1)
         return session.text('.updated', [id])
       } else {
         return session.text('.unchanged', [id])
@@ -152,9 +182,9 @@ export function apply(ctx: Context, { rules, interval }: Config) {
     })
 
     register('.list', async ({ session }) => {
-      const { forward } = session.channel
-      if (!forward.length) return session.text('.empty')
-      return [session.text('.header'), ...forward].join('\n')
+      const targets = getTargets(session)
+      if (!targets.length) return session.text('.empty')
+      return [session.text('.header'), ...targets].join('\n')
     }).alias('forward.ls')
-  })
+  }
 }

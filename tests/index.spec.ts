@@ -17,11 +17,13 @@ app.plugin(help)
 const session2 = app.mock.client('123', '456')
 const session3 = app.mock.client('789', '654')
 
-app.plugin(forward, [{
-  source: 'mock:456',
-  target: 'mock:654',
-  selfId: DEFAULT_SELF_ID,
-}])
+const fork = app.plugin(forward, {
+  rules: [{
+    source: 'mock:456',
+    target: 'mock:654',
+    selfId: DEFAULT_SELF_ID,
+  }],
+})
 
 before(async () => {
   await app.start()
@@ -50,6 +52,7 @@ describe('@koishijs/plugin-forward', () => {
 
   it('command usage', async () => {
     app.plugin(memory)
+    fork.update({ storage: 'database' })
     await app.lifecycle.flush()
     await app.mock.initUser('123', 3)
 
