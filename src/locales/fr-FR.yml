@@ -1,6 +1,6 @@
 commands:
   forward:
-    description: Définir la règle du transfert de messages
+    description: Définir la règle du transfert de message
     usage: 'ID de canal actuel : {cid}'
   forward.add:
     description: Ajouter un canal pour transfert de message
@@ -20,4 +20,4 @@ commands:
     description: Voir la liste des canaux pour transfert de message.
     messages:
       empty: 'Le canal actuel ne définir pas le canal pour transfert de message.'
-      header: 'Les canaux de canal actuel pour transfert de messages :'
+      header: 'Les canaux de canal actuel pour transfert de message :'
