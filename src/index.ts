@@ -1,5 +1,4 @@
 import { Command, Context, Dict, Schema, segment, Session, Time } from 'koishi'
-import {} from '@koishijs/loader'
 
 declare module 'koishi' {
   interface Channel {
@@ -24,21 +23,21 @@ export const Rule: Schema<Rule> = Schema.object({
 export const name = 'forward'
 
 export interface Config {
+  mode?: 'database' | 'config'
   rules?: Rule[]
-  storage?: 'database' | 'config'
   replyTimeout?: number
 }
 
 export const Config: Schema<Config> = Schema.intersect([
   Schema.object({
-    storage: Schema.union([
+    mode: Schema.union([
       Schema.const('database' as const).description('数据库'),
       Schema.const('config' as const).description('配置文件'),
     ]).default('config').description('转发规则的存储方式。'),
   }),
   Schema.union([
     Schema.object({
-      storage: Schema.const('config' as const),
+      mode: Schema.const('config' as const),
       rules: Schema.array(Rule).description('转发规则列表。').hidden(),
     }),
     Schema.object({}),
@@ -106,7 +105,7 @@ export function apply(ctx: Context, config: Config) {
     if (data) return sendRelay(session, data)
 
     const tasks: Promise<void>[] = []
-    if (config.storage === 'config') {
+    if (config.mode === 'config') {
       for (const rule of config.rules) {
         if (session.cid !== rule.source) continue
         tasks.push(sendRelay(session, rule))
@@ -128,15 +127,15 @@ export function apply(ctx: Context, config: Config) {
     fields.add('forward')
   })
 
-  if (config.storage === 'database') {
+  if (config.mode === 'database') {
     ctx.using(['database'], commands)
-  // TODO support config storage
+  // TODO support config mode
   // } else if (ctx.loader?.writable) {
   //   ctx.plugin(commands)
   }
 
   function getTargets(session: Session<never, 'forward'>) {
-    if (config.storage === 'database') {
+    if (config.mode === 'database') {
       return session.channel.forward
     }
 

@@ -28,9 +28,8 @@ const fork = app.plugin(forward, {
 const send = app.bots[0].sendMessage = jest.fn(async () => ['2000'])
 app.bots[0].getGuildMemberList = jest.fn(async () => [{ userId: '321', nickname: 'foo' }])
 
-before(async () => {
-  await app.start()
-})
+before(() => app.start())
+after(() => app.stop())
 
 describe('@koishijs/plugin-forward', () => {
   it('basic support', async () => {
@@ -42,13 +41,13 @@ describe('@koishijs/plugin-forward', () => {
     send.mockClear()
     await session3.shouldNotReply('hello')
     expect(send.mock.calls).to.have.length(0)
-    await session3.shouldNotReply('<quote id=2000/> hello')
+    await session3.shouldNotReply('<quote id="2000"/> hello')
     expect(send.mock.calls).to.have.length(1)
     expect(send.mock.calls).to.have.shape([['456', '789: hello']])
 
     send.mockClear()
     send.mockImplementation(async () => ['3000'])
-    await session2.shouldNotReply('<quote id=3000/> hello')
+    await session2.shouldNotReply('<quote id="3000"/> hello')
     expect(send.mock.calls).to.have.length(1)
     expect(send.mock.calls).to.have.shape([['654', '123: hello']])
   })
@@ -66,7 +65,7 @@ describe('@koishijs/plugin-forward', () => {
     await session2.shouldReply('forward ls', '当前频道的目标频道列表为：\nmock:654')
 
     send.mockClear()
-    await session2.shouldNotReply('hello <at id=321/>')
+    await session2.shouldNotReply('hello <at id="321"/>')
     expect(send.mock.calls).to.have.length(1)
     expect(send.mock.calls).to.have.shape([['654', '123: hello @foo']])
 
