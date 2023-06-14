@@ -1,4 +1,4 @@
-import { Command, Context, Dict, Schema, segment, Session, Time } from 'koishi'
+import { Bot, Command, Context, Dict, Schema, segment, Session, Time } from 'koishi'
 
 declare module 'koishi' {
   interface Channel {
@@ -68,7 +68,12 @@ export function apply(ctx: Context, config: Config) {
         rule.guildId = channel.guildId
       }
 
-      const bot = ctx.bots[`${platform}:${rule.selfId}`]
+      // const bot = ctx.bots[`${platform}:${rule.selfId}`]
+      // According to my test result,this cannot work properly in the latest Koishi
+      // this is my solution
+      const bot = ctx.bots.find((bot)=>{
+        return bot.platform === platform && bot.userId === rule.selfId;
+      })
 
       // replace all mentions (koishijs/koishi#506)
       if (segment.select(parsed.content, 'at').length) {
