@@ -1,5 +1,5 @@
 {
-  "name": "koishi-plugin-forward",
+  "name": "@constasj/koishi-plugin-forward",
   "version": "4.0.1",
   "description": "Forward plugin for Koishi",
   "main": "lib/index.js",
