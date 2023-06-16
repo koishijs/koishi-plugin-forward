@@ -68,11 +68,8 @@ export function apply(ctx: Context, config: Config) {
         rule.guildId = channel.guildId
       }
 
-      // const bot = ctx.bots[`${platform}:${rule.selfId}`]
-      // According to my test result,this cannot work properly in the latest Koishi
-      // this is my solution
       const bot = ctx.bots.find((bot)=>{
-        return bot.platform === platform && bot.userId === rule.selfId;
+        return bot.platform === platform && (bot.userId === rule.selfId && bot.selfId)
       })
 
       // replace all mentions (koishijs/koishi#506)
