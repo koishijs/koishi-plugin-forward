@@ -69,7 +69,7 @@ export function apply(ctx: Context, config: Config) {
       }
 
       const bot = ctx.bots.find((bot)=>{
-        return bot.platform === platform && (bot.userId === rule.selfId && bot.selfId)
+        return bot.platform === platform && (bot.userId === rule.selfId || bot.selfId === rule.selfId )
       })
 
       // replace all mentions (koishijs/koishi#506)
