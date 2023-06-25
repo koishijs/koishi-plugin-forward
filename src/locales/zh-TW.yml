@@ -1,7 +1,7 @@
 commands:
   forward:
-    description: 设置消息转发
-    usage: 当前频道 ID：{cid}
+    description: 設置消息轉發
+    usage: 當前頻道 ID：{cid}
   forward.add:
     description: 添加目標頻道
     messages:
