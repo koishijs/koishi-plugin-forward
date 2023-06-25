@@ -3,21 +3,21 @@ commands:
     description: 设置消息转发
     usage: 当前频道 ID：{cid}
   forward.add:
-    description: 添加目标频道
+    description: 添加目標頻道
     messages:
-      unchanged: '{0} 已经是当前频道的目标频道。'
-      updated: '已成功添加目标频道 {0}。'
+      unchanged: '{0} 已經是當前頻道的目標頻道。'
+      updated: '已成功添加目標頻道 {0}。'
   forward.remove:
-    description: 移除目标频道
+    description: 移除目標頻道
     messages:
-      unchanged: '{0} 不是当前频道的目标频道。'
-      updated: '已成功移除目标频道 {0}。'
+      unchanged: '{0} 不是當前頻道的目標頻道。'
+      updated: '已成功移除目標頻道 {0}。'
   forward.clear:
-    description: 移除全部目标频道
+    description: 移除全部目標頻道
     messages:
-      updated: '已成功移除全部目标频道。'
+      updated: '已成功移除全部目標頻道。'
   forward.list:
-    description: 查看目标频道列表
+    description: 查看目標頻道列表
     messages:
-      empty: '当前频道没有设置目标频道。'
-      header: '当前频道的目标频道列表为：'
+      empty: '當前頻道沒有設置目標頻道。'
+      header: '當前頻道的目標頻道列表為：'
